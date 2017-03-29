@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using LitJson;
 
 public class NetworkConnectionRegist : MonoBehaviour {
 
@@ -43,20 +44,18 @@ public class NetworkConnectionRegist : MonoBehaviour {
 			//Debug.Log(www.error);
 		}
 		else {
-			string serverMessage = www.downloadHandler.text;
-			string str1 = serverMessage.Substring (1, serverMessage.Length - 2);
+			JsonData jsonData = JsonMapper.ToObject (www.downloadHandler.text);
 
-			string[] str2 = str1.Split (',');
-			string[] str21 = str2 [0].Split (':');
-			string[] str22 = str2 [1].Split (':');
-			str22 [1] = str22 [1].Substring (1, str22 [1].Length - 2);
-			if (str21 [1] == "false") {
-				if (str22 [1] == "註冊資料不完全") {
+			string success = jsonData ["success"].ToString ();
+
+			if (success == "False") {
+				string message = jsonData ["messages"].ToString ();
+				if ( message == "註冊資料不完全") {
 					GameObject.Find ("GameController").GetComponent<MessageManager> ().ShowMessage ("註冊資料不完全！", false);
-				} else if (str22 [1] == "此信箱已被註冊過") {
+				} else if (message == "此信箱已被註冊過") {
 					GameObject.Find ("GameController").GetComponent<MessageManager> ().ShowMessage ("此信箱已被註冊過！", false);
 				}
-			} else if (str21 [1] == "true") {
+			} else if (success == "True") {
 				GameObject.Find ("GameController").GetComponent<MessageManager> ().ShowMessage ("認證信已寄出！\n請至學校信箱確認！", false);
 			}
 

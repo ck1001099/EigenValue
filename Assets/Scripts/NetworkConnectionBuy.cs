@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using LitJson;
 
 public class NetworkConnectionBuy : MonoBehaviour {
 
@@ -31,20 +32,17 @@ public class NetworkConnectionBuy : MonoBehaviour {
 			//Debug.Log(www.error);
 		}
 		else {
+			JsonData jsonData = JsonMapper.ToObject (www.downloadHandler.text);
 
-			string serverMessage = www.downloadHandler.text;
-			string str1 = serverMessage.Substring (1, serverMessage.Length - 2);
+			string success = jsonData ["success"].ToString ();
 
-			string[] str2 = str1.Split (',');
-			int length = str2.Length;
-			string[] str21 = str2 [0].Split (':');
-			if (str21 [1] == "true") {
-				GameObject.Find ("GameController").GetComponent<MessageManager> ().ShowMessage ("購買成功！", false);
+			if (success == "True") {
 				PlayerPrefs.SetInt ("points", PlayerPrefs.GetInt ("points") - points);
 				GameObject product = GameObject.Find ("Canvas/Shop/ProductList/Viewport/Content").gameObject;
 				for (int i = product.transform.childCount - 1; i >= 0; i--) {
 					Destroy (product.transform.GetChild (i).gameObject);
 				}
+				GameObject.Find ("GameController").GetComponent<MessageManager> ().ShowMessage ("購買成功！", false);
 				GameObject.Find ("GameController").GetComponent<NetworkConnectionShopList> ().Connection ();
 				string item = PlayerPrefs.GetString ("boughtItem");
 				if (item.Contains ("\"item_name\":" + ID)) {
@@ -59,9 +57,11 @@ public class NetworkConnectionBuy : MonoBehaviour {
 				}
 				PlayerPrefs.SetString ("boughtItem", item);
 				GameObject.Find ("GameController").GetComponent<GameController> ().UpdateInfo ();
-			} else if (str21 [1] == "false") {
-				string[] str22 = str1.Split (':');
-				if (str22 [1] == "很抱歉！您的點數不足！") {
+			} else if (success == "False") {
+
+				string message = jsonData ["messages"].ToString ();
+
+				if (message == "很抱歉！您的點數不足！") {
 					GameObject.Find ("GameController").GetComponent<MessageManager> ().ShowMessage ("很抱歉！\n您的點數不足！", false);
 				} else {
 					GameObject.Find ("GameController").GetComponent<MessageManager> ().ShowMessage ("很抱歉！\n您已超過此項目購買上限！\n請選購其他商品！", false);
@@ -78,7 +78,6 @@ public class NetworkConnectionBuy : MonoBehaviour {
 			//"time":"2017-03-26T06:00:19.848858Z",
 			//"messages":"購買成功！"}
 
-			Debug.Log (www.downloadHandler.text);
 		}
 	}
 

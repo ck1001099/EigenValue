@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.Networking;
+using LitJson;
 
 public class NetworkConnectionLogout : MonoBehaviour {
 	private const string url = "http://hnhn789.pythonanywhere.com/accounts/logout/";
@@ -34,12 +35,8 @@ public class NetworkConnectionLogout : MonoBehaviour {
 			//Debug.Log(www.error);
 		}
 		else {
-			string serverMessage = www.downloadHandler.text;
-			string str1 = serverMessage.Substring (1, serverMessage.Length - 2);
-
-			string[] str2 = str1.Split (',');
-			string[] str21 = str2 [0].Split (':');
-			if (str21 [1] == "true") {
+			JsonData jsonData = JsonMapper.ToObject (www.downloadHandler.text);
+			if (jsonData["success"].ToString() == "True") {
 				PlayerPrefs.SetInt ("login", 0);
 				PlayerPrefs.SetString ("username", "");
 				PlayerPrefs.SetString ("storycode", "");

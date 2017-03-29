@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using LitJson;
 
 public class NetworkConnectionShopList : MonoBehaviour {
 
@@ -28,37 +29,30 @@ public class NetworkConnectionShopList : MonoBehaviour {
 			//Debug.Log(www.error);
 		}
 		else {
-			string serverMessage = www.downloadHandler.text;
+			JsonData jsonData = JsonMapper.ToObject (www.downloadHandler.text);
 
-			string[] str1 = serverMessage.Split ('{');
-			int length = str1.Length;
-			for (int i = 1; i < length; i++) {
+			for (int i = 0; i < jsonData.Count; i++) {
 				GameObject obj = GameObject.Instantiate (product);
 				obj.transform.SetParent (content.transform);
 				obj.transform.localScale = new Vector3 (1, 1, 1);
 
-				str1 [i] = str1 [i].Substring (0, str1 [i].Length - 2);
-				string[] str2 = str1 [i].Split (',');
-
-				string[] str21 = str2 [0].Split (':');
-				string[] str22 = str2 [1].Split (':');
-				string[] str23 = str2 [2].Split (':');
-				string[] str24 = str2 [3].Split (':');
-				string[] str25 = str2 [4].Split ('"');
-
-				str22 [1] = str22 [1].Substring (1, str22 [1].Length - 2);
+				string ID = jsonData [i] ["pk"].ToString ();
+				string productname = jsonData [i] ["name"].ToString ();
+				string price = jsonData [i] ["price"].ToString ();
+				string remain = jsonData [i] ["remain"].ToString ();
+				string imageurl = jsonData [i] ["image"].ToString ();
 
 				//GameObject.Find ("Canvas/Message/TwoButton/YES").GetComponent<Button> ().onClick.AddListener (/*function*/);
-				obj.AddComponent<NetworkConnectionBuy>();
-				obj.GetComponent<NetworkConnectionBuy> ().ID = str21 [1];
-				obj.GetComponent<NetworkConnectionBuy> ().productname = str22 [1];
-				obj.GetComponent<NetworkConnectionBuy> ().points = System.Convert.ToInt32 (str23 [1]);
-				obj.transform.FindChild("Buy").GetComponent<Button>().onClick.AddListener(obj.GetComponent<NetworkConnectionBuy> ().ShowMessage);
+				obj.AddComponent<NetworkConnectionBuy> ();
+				obj.GetComponent<NetworkConnectionBuy> ().ID = ID;
+				obj.GetComponent<NetworkConnectionBuy> ().productname = productname;
+				obj.GetComponent<NetworkConnectionBuy> ().points = System.Convert.ToInt32 (price);
+				obj.transform.FindChild ("Buy").GetComponent<Button> ().onClick.AddListener (obj.GetComponent<NetworkConnectionBuy> ().ShowMessage);
 
-				obj.transform.Find ("Info").GetComponent<Text> ().text = str22 [1] + "\n" + "$ " + str23 [1] + "P\n" + "剩餘數目：" + str24 [1];
-				StartCoroutine (downloadImage (str25 [3], obj));
+				obj.transform.Find ("Info").GetComponent<Text> ().text = productname + "\n" + "$ " + price + "P\n" + "剩餘數目：" + remain;
+				StartCoroutine (downloadImage (imageurl, obj));
 
-				items.Add (str21 [1], str22 [1]);
+				items.Add (ID, productname);
 			}
 
 			//[{"pk":1,"name":"一抽獎卷(Samsonite電腦包)","price":50,"remain":999,"image":"http://i63.tinypic.com/scwg45.jpg"},

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using LitJson;
 
 public class NetworkConnectionQRcode : MonoBehaviour {
 
@@ -46,20 +47,14 @@ public class NetworkConnectionQRcode : MonoBehaviour {
 			//Debug.Log(www.error);
 		}
 		else {
-			string serverMessage = www.downloadHandler.text;
-			string str1 = serverMessage.Substring (1, serverMessage.Length - 2);
+			JsonData jsonData = JsonMapper.ToObject (www.downloadHandler.text);
 
-			string[] str2 = str1.Split (',');
-			int length = str2.Length;
-			string[] str21 = str2 [0].Split (':');
-			if (str21 [1] == "true") {
-				//split ':'
-				string[] str22 = str2 [1].Split (':');
-				//string[] str23 = str2 [2].Split (':');
-				//string[] str24 = str2 [3].Split (':');
-				str22 [1] = str22 [1].Substring (1, str22 [1].Length - 2);
+			string success = jsonData ["success"].ToString ();
+
+			if (success == "True") {
+				string points = jsonData ["point_received"].ToString ();
 				//store information
-				int get_points = System.Convert.ToInt32 (str22 [1]);
+				int get_points = System.Convert.ToInt32 (points);
 				GameObject.Find ("GameController").GetComponent<MessageManager> ().ShowMessage ("恭喜獲得 " + get_points.ToString () + " points\n請繼續努力唷>w<", false);
 				PlayerPrefs.SetInt ("points", PlayerPrefs.GetInt ("points") + get_points);
 				string storyCode = PlayerPrefs.GetString ("storycode");
@@ -69,10 +64,9 @@ public class NetworkConnectionQRcode : MonoBehaviour {
 				PlayerPrefs.SetString ("storycode", storyCode);
 				GameObject.Find ("GameController").GetComponent<GameController> ().UpdateInfo ();
 				GameObject.Find ("GameController").GetComponent<GameController> ().SetStoryActive ();
-			} else if (str21 [1] == "false") {
-				string[] str22 = str2 [1].Split (':');
-				str22 [1] = str22 [1].Substring (1, str22 [1].Length - 2);
-				if (str22 [1] == "QRcode不存在") {
+			} else if (success == "False") {
+				string message = jsonData ["messages"].ToString ();
+				if (message == "QRcode不存在") {
 					int count = error_message.Count;
 					int num = Random.Range (0, count - 1);
 					GameObject.Find ("GameController").GetComponent<MessageManager> ().ShowMessage (error_message [num], false);
@@ -92,8 +86,6 @@ public class NetworkConnectionQRcode : MonoBehaviour {
 			//"point_received":"11",
 			//"time":"2017-03-26T02:22:05.254126Z",
 			//"messages":"成功得到點數！"}
-
-
 
 			//Debug.Log (www.downloadHandler.text);
 		}
